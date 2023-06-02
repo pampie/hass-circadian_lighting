@@ -322,9 +322,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         await self._adjust_lights(lights or self._lights, transition)
 
     async def _force_update_switch(self, lights=None):
-        task = asyncio.create_task(self._update_switch(
-            lights, transition=self._initial_transition, force=True
-        ))
+        task = asyncio.create_task(
+            self._update_switch(lights, transition=self._initial_transition, force=True)
+        )
         return await task
 
     def _is_disabled(self):
