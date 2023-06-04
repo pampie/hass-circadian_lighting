@@ -249,8 +249,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
 
         if self._state is not None:  # If not None, we got an initial value
             return
-
-        state = await self.async_get_last_state()
+        task = [asyncio.create_task(self.async_get_last_state())]
+        state = await asyncio.wait(task)
         self._state = state and state.state == STATE_ON
 
     @property
@@ -270,7 +270,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
     async def async_turn_on(self, **kwargs):
         """Turn on circadian lighting."""
         self._state = True
-        await self._force_update_switch()
+        task = [asyncio.create_task(self._force_update_switch())]
+        await asyncio.wait(task)
 
     async def async_turn_off(self, **kwargs):
         """Turn off circadian lighting."""
@@ -383,9 +384,10 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         assert to_state.state == "on"
         if from_state is None or from_state.state != "on":
             _LOGGER.debug(_difference_between_states(from_state, to_state))
-            task = asyncio.create_task(self._force_update_switch(lights=[entity_id]))
-            await task 
+            task = [asyncio.create_task(self._force_update_switch(lights=[entity_id]))]
+            await asyncio.wait(task) 
 
     async def _state_changed(self, entity_id, from_state, to_state):
         _LOGGER.debug(_difference_between_states(from_state, to_state))
-        await self._force_update_switch()
+        task = [asyncio.create_task(self._force_update_switch())]
+        await asyncio.wait(task)
