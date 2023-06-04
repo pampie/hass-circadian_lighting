@@ -249,8 +249,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
 
         if self._state is not None:  # If not None, we got an initial value
             return
-        task = [asyncio.create_task(self.async_get_last_state())]
-        state = await asyncio.wait(task)
+        state = await self.async_get_last_state()
         self._state = state and state.state == STATE_ON
 
     @property
