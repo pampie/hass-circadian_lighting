@@ -319,12 +319,13 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
             return
         self._hs_color = self._calc_hs()
         self._brightness = self._calc_brightness()
-        await self._adjust_lights(lights or self._lights, transition)
+        task = [asyncio.create_task(self._adjust_lights(lights or self._lights, transition))]
+        await asyncio.wait(task)
 
     async def _force_update_switch(self, lights=None):
-        task = asyncio.create_task(
+        task = [asyncio.create_task(
             self._update_switch(lights, transition=self._initial_transition, force=True)
-        )
+        )]
         return await asyncio.wait(task)
 
     def _is_disabled(self):
@@ -370,8 +371,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 service_data,
             )
             tasks.append(
-                self.hass.services.async_call(
+                asyncio.create_task(self.hass.services.async_call(
                     LIGHT_DOMAIN, SERVICE_TURN_ON, service_data
+                 )
                 )
             )
         if tasks:
@@ -381,7 +383,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         assert to_state.state == "on"
         if from_state is None or from_state.state != "on":
             _LOGGER.debug(_difference_between_states(from_state, to_state))
-            await self._force_update_switch(lights=[entity_id])
+            task = asyncio.create_task(self._force_update_switch(lights=[entity_id]))
+            await task 
 
     async def _state_changed(self, entity_id, from_state, to_state):
         _LOGGER.debug(_difference_between_states(from_state, to_state))
